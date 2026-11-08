@@ -9,8 +9,8 @@ from supabase import create_client, Client
 # ==========================================
 # Saat online di Streamlit Cloud, ambil dari secrets
 # Saat lokal, isi manual di sini (atau buat file .streamlit/secrets.toml)
-SUPABASE_URL = st.secrets.get("supabase", {}).get("url", "URL_SUPABASE_KAMU")
-SUPABASE_KEY = st.secrets.get("supabase", {}).get("key", "KEY_SUPABASE_KAMU")
+SUPABASE_URL = st.secrets["supabase"]["url"]
+SUPABASE_KEY = st.secrets["supabase"]["key"]
 
 @st.cache_resource
 def get_supabase() -> Client:
