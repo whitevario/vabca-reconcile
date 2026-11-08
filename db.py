@@ -142,7 +142,9 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
             "uploaded_at": now
         })
     
-    supabase.table("upload_log").upsert(log_data).execute()
+       # Kirim satu per satu untuk menghindari error duplikat dalam satu antrean
+    for log in log_data:
+        supabase.table("upload_log").upsert(log).execute()
     st.cache_data.clear()
 
 def upsert_master(table: str, df: pd.DataFrame):
