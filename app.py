@@ -200,7 +200,23 @@ def render_upload():
                                 # Buat set untuk mencatat file yang sudah diproses di antrean ini
                 processed_names = set() 
 
+                                processed_names = set() # Mencegah file dengan nama sama diproses 2x
                 for f in uploaded_files:
+                    # Jika nama file sudah ada di database (skip) atau sudah diproses (duplikat), lewati
+                    if (f.name in existing and mode_duplikat == "skip") or (f.name in processed_names): 
+                        continue
+                        
+                    df, _, _ = parse_txt_content(f.getvalue(), f.name)
+                    if df.empty: continue
+                    
+                    processed_names.add(f.name) # Tandai file ini sudah diproses
+                    
+                    df_list.append(df)
+                    file_info_list.append((f.name, f.getvalue()))
+                    total_rows += len(df)
+                    if f.name in existing: replaced += 1
+                    else: saved += 1
+                        
                     # Jika nama file sudah ada di database (skip) atau sudah diproses di antrean (duplikat), lewati
                     if (f.name in existing and mode_duplikat == "skip") or (f.name in processed_names): 
                         continue
