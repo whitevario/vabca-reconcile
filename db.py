@@ -104,20 +104,25 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
     df_all["uploaded_at"] = now
     df_all["bulan"] = pd.to_datetime(df_all["date"], format="%d/%m/%Y", errors="coerce").dt.strftime("%Y-%m")
     
-    # 1. Bersihkan karakter NUL (\x00) dari semua kolom teks
     for col in df_all.select_dtypes(include=['object']).columns:
         df_all[col] = df_all[col].astype(str).str.replace('\x00', '', regex=False)
         
     df_all = df_all.astype(object).where(pd.notna(df_all), None)
     records = df_all.to_dict(orient="records")
     
-    # 2. Hapus file lama (jika replace) secara sekaligus (Bulk Delete)
-    for fname, _ in file_info_list:
-        supabase.table("transaksi").delete().eq("asal_file", fname).execute()
-        supabase.table("upload_log").delete().eq("file_name", fname).execute()
+    # --- HAPUS DATA LAMA SEKALIGUS (BULK DELETE) ---
+    # Ambil semua nama file yang mau di-replace
+    list_fnames = [fname for fname, _ in file_info_list]
+    if list_fnames:
+        try:
+            # Supabase mendukung penghapusan dengan IN (daftar)
+            supabase.table("transaksi").delete().in_("asal_file", list_fnames).execute()
+            supabase.table("upload_log").delete().in_("file_name", list_fnames).execute()
+        except Exception as e:
+            pass # Abaikan jika gagal, karena file mungkin memang belum ada
         
-    # 3. Insert transaksi (Perbesar chunk_size menjadi 500 agar lebih cepat)
-    chunk_size = 500 
+    # --- INSERT TRANSAKSI (Perbesar chunk_size menjadi 1000) ---
+    chunk_size = 1000 
     for i in range(0, len(records), chunk_size):
         try:
             supabase.table("transaksi").insert(records[i:i+chunk_size]).execute()
@@ -125,7 +130,7 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
             st.error(f"Error detail dari Supabase (Transaksi): {str(e)}")
             raise e
         
-    # 4. Insert log
+    # --- INSERT LOG ---
     log_data = []
     for df, (fname, content) in zip(df_list, file_info_list):
         clean_fname = str(fname).replace('\x00', '')
@@ -136,8 +141,15 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
             "uploaded_at": now
         })
     
-    for log in log_data:
-        supabase.table("upload_log").upsert(log).execute()
+    # Gunakan upsert sekaligus (bukan looping)
+    if log_data:
+        try:
+            supabase.table("upload_log").upsert(log_data).execute()
+        except Exception:
+            # Jika upsert sekaligus gagal (karena nama file ganda di antrean)
+            # kita looping satu per satu sebagai fallback
+            for log in log_data:
+                supabase.table("upload_log").upsert(log).execute()
         
     st.cache_data.clear()
 
