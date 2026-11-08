@@ -609,11 +609,11 @@ def render_master():
     st.divider()
 
     # --- 3. MASTER KATEGORI ---
-    st.markdown("#### 🗂️ Master Kategori (KODE TP--2 digit pertama VA)")
+    st.markdown("#### 🗂️ Master Kategori TP (KODE TP--2 digit pertama VA)")
     df_kat = db.load_master("master_kategori")
     
     # Fitur Upload Kategori
-    up_kat = st.file_uploader("Upload CSV/Excel Kategori (kolom: prefix_va, kategori)", type=["csv", "xlsx"], key="up_kat_v3")
+    up_kat = st.file_uploader("Upload CSV/Excel Kategori (kolom: Kode TP, Kategori)", type=["csv", "xlsx"], key="up_kat_v3")
     if up_kat:
         if st.session_state.get("done_up_kat") != up_kat.name:
             df_up = pd.read_csv(up_kat) if up_kat.name.endswith(".csv") else pd.read_excel(up_kat)
