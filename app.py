@@ -630,9 +630,9 @@ def render_master():
         df_kat = pd.DataFrame(columns=["prefix_va", "kategori"])
         
     edited_kat = st.data_editor(
-        df_kat, num_rows="dynamic", use_container_width=True, key="edit_kat_v3",
+        df_kat, num_rows="dynamic", use_container_width=False, key="edit_kat_v3",
         column_config={
-            "prefix_va": st.column_config.TextColumn("Kode VA", width="small"),
+            "prefix_va": st.column_config.TextColumn("Kode VA", width="large"),
             "kategori": st.column_config.TextColumn("Kategori", width="large")
         }
     )
@@ -664,8 +664,8 @@ def render_master():
     edited_alias_sek = st.data_editor(
         df_alias_sek, num_rows="dynamic", use_container_width=False, key="edit_alias_sek_v1",
         column_config={
-            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
-            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
+            "kode_bank": st.column_config.TextColumn("Kode Bank", width="large"),
+            "kode_pic": st.column_config.TextColumn("Kode PIC", width="large")
         }
     )
     if st.button("💾 Simpan Master Alias Sekolah"):
@@ -696,8 +696,8 @@ def render_master():
     edited_alias_bay = st.data_editor(
         df_alias_bay, num_rows="dynamic", use_container_width=False, key="edit_alias_bay_v1",
         column_config={
-            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
-            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
+            "kode_bank": st.column_config.TextColumn("Kode Bank", width="large"),
+            "kode_pic": st.column_config.TextColumn("Kode PIC", width="large")
         }
     )
     if st.button("💾 Simpan Master Alias Bayar"):
