@@ -58,6 +58,19 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Tampilkan info kuota di bawah judul
+db_size = db.get_db_size_mb()
+if db_size > 0:
+    # Batas gratis Supabase adalah 500 MB
+    sisa = 500 - db_size
+    persen = (db_size / 500) * 100
+    
+    st.caption(f"💾 **Penggunaan Database:** {db_size:.2f} MB dari 500 MB ({persen:.1f}%). Sisa: {sisa:.2f} MB")
+    
+    # Beri peringatan jika sudah di atas 80%
+    if persen > 80:
+        st.warning("⚠️ Kuota database hampir penuh! Segera hapus data lama atau upgrade paket Supabase.")
+###==        
 st.markdown("👩‍💻 Created by **Tri**© Oct 2026 | *Sistem Pencocokkan RK VA & Data PIC*")
 st.info("ℹ️ **DISCLAIMER:** This application is a personal tool for internal reconciliation. It is NOT an official enterprise system provided by the company. The user assumes full responsibility for the data.")
 
