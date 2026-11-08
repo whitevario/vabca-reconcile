@@ -6,11 +6,10 @@ import db
 from parser import parse_txt_content, nama_bulan_tp
 from excel_helper import to_excel, pivot_to_excel
 
-# --- SET PAGE CONFIG (HANYA BOLEH 1 KALI) ---
-st.set_page_config(page_title="VABCA Reconcile SBY1", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="VABCA Reconcile", page_icon="⚖️", layout="wide")
 db.init_db()
 
-# --- INISIALISASI SESSION STATE (WAJIB DI PALING ATAS) ---
+# --- INISIALISASI SESSION STATE ---
 if "uploader_key" not in st.session_state: 
     st.session_state.uploader_key = 0
 if "upload_success" not in st.session_state: 
@@ -23,41 +22,19 @@ if not st.user.is_logged_in:
     st.warning("🔒 Aplikasi ini hanya untuk internal Yayasan Yohannes Gabriel. Silakan login.")
     if st.button("Login dengan Google"):
         st.login("google")
-    st.stop() # Hentikan aplikasi jika belum login
+    st.stop()
 
-# --- CEK DOMAIN EMAIL ---
 email_user = st.user.get("email", "")
 if not email_user.endswith("@yohannesgabriel.org"):
-    st.error(f"Akses Ditolak. Email {email_user} tidak diizinkan. Gunakan email @yohannesgabriel.org.")
+    st.error(f"Akses Ditolak. Email {email_user} tidak diizinkan.")
     if st.button("Logout"):
         st.logout()
-    st.stop() # Hentikan aplikasi jika domain salah
+    st.stop()
 
-# --- JIKA LOLOS, TAMPILKAN TOMBOL LOGOUT DI SIDEBAR ---
 with st.sidebar:
     st.write(f"Login sebagai: **{email_user}**")
     if st.button("Logout"):
         st.logout()
-
-st.set_page_config(page_title="VABCA Reconcile", page_icon="⚖️", layout="wide")
-db.init_db()
-if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
-if "upload_success" not in st.session_state: st.session_state.upload_success = None
-if "upload_error" not in st.session_state: st.session_state.upload_error = None
-
-# Proteksi Password (Opsional, hapus blok ini jika tidak ingin pakai password)
-def check_password():
-    if st.session_state.get("auth"): return True
-    pwd = st.text_input("🔒 Masukkan Password", type="password")
-    if pwd == st.secrets.get("password", {}).get("rahasia", "admin123"):
-        st.session_state.auth = True
-        return True
-    elif pwd: st.error("Password salah")
-    return False
-
-# if not check_password(): st.stop() # <--- Buka komentar ini jika ingin pakai password
-
-#st.title("⚖️ VABCA Reconcile PWK SURABAYA 1")
 
 st.markdown(
     """
@@ -69,21 +46,17 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Tampilkan info kuota di bawah judul
+# Info kuota
 db_size = db.get_db_size_mb()
 if db_size > 0:
-    # Batas gratis Supabase adalah 500 MB
     sisa = 500 - db_size
     persen = (db_size / 500) * 100
-    
     st.caption(f"💾 **Penggunaan Database:** {db_size:.2f} MB dari 500 MB ({persen:.1f}%). Sisa: {sisa:.2f} MB")
-    
-    # Beri peringatan jika sudah di atas 80%
     if persen > 80:
-        st.warning("⚠️ Kuota database hampir penuh! Segera hapus data lama atau upgrade paket Supabase.")
-###==        
+        st.warning("⚠️ Kuota database hampir penuh!")
+
 st.markdown("👩‍💻 Created by **Tri**© Oct 2026 | *Sistem Pencocokkan RK VA & Data PIC*")
-st.info("ℹ️ **DISCLAIMER:** This application is a personal tool for internal reconciliation. It is NOT an official enterprise system provided by the company. The user assumes full responsibility for the data.")
+st.info("ℹ️ **DISCLAIMER:** This application is a personal tool for internal reconciliation. It is NOT an official enterprise system provided by the company.")
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -156,19 +129,13 @@ def apply_filters_edit(df: pd.DataFrame, key_prefix: str) -> pd.DataFrame:
 
 @st.fragment
 def render_upload():
-    # --- INISIALISASI PENGAMAN (WAJIB ADA DI SINI) ---
-    if "uploader_key" not in st.session_state:
-        st.session_state.uploader_key = 0
-    if "upload_success" not in st.session_state:
-        st.session_state.upload_success = None
-    if "upload_error" not in st.session_state:
-        st.session_state.upload_error = None
-    # -------------------------------------------------
+    if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
+    if "upload_success" not in st.session_state: st.session_state.upload_success = None
+    if "upload_error" not in st.session_state: st.session_state.upload_error = None
 
     st.subheader("📤 Upload File TXT")
     
     if st.session_state.upload_success:
-        # ... (sisa kode di bawahnya biarkan sama)
         s = st.session_state.upload_success
         st.success(f"✅ Selesai! {s['saved']} file baru, {s['replaced']} diganti. {s['total_rows']} baris tersimpan.")
         if st.button("🗑️ Bersihkan Tampilan"): 
@@ -197,41 +164,16 @@ def render_upload():
                 df_list = []
                 file_info_list = []
                 
-                                # Buat set untuk mencatat file yang sudah diproses di antrean ini
                 processed_names = set() 
 
                 for f in uploaded_files:
-                    # Jika nama file sudah ada di database (skip) atau sudah diproses (duplikat), lewati
                     if (f.name in existing and mode_duplikat == "skip") or (f.name in processed_names): 
                         continue
                         
                     df, _, _ = parse_txt_content(f.getvalue(), f.name)
                     if df.empty: continue
                     
-                    processed_names.add(f.name) # Tandai file ini sudah diproses
-                    
-                    df_list.append(df)
-                    file_info_list.append((f.name, f.getvalue()))
-                    total_rows += len(df)
-                    if f.name in existing: replaced += 1
-                    else: saved += 1
-                        
-                    # Jika nama file sudah ada di database (skip) atau sudah diproses di antrean (duplikat), lewati
-                    if (f.name in existing and mode_duplikat == "skip") or (f.name in processed_names): 
-                        continue
-                        
-                    df, _, _ = parse_txt_content(f.getvalue(), f.name)
-                    if df.empty: continue
-                    
-                    # Tandai nama file ini sudah diproses
                     processed_names.add(f.name) 
-                    
-                    df_list.append(df)
-                    file_info_list.append((f.name, f.getvalue()))
-                    total_rows += len(df)
-                    if f.name in existing: replaced += 1
-                    else: saved += 1
-                    if df.empty: continue
                     
                     df_list.append(df)
                     file_info_list.append((f.name, f.getvalue()))
@@ -242,9 +184,7 @@ def render_upload():
                 if df_list:
                     with st.spinner("Menyimpan ke Cloud Supabase..."):
                         db.insert_transaksi_bulk(df_list, file_info_list)
-                # --- TAMBAHAN UNTUK DEBUG ---
-                st.warning(f"DEBUG: Mencoba menyimpan {total_rows} baris data ke Supabase...")
-                # ----------------------------
+                
                 st.session_state.upload_success = {"saved": saved, "replaced": replaced, "total_rows": total_rows}
                 st.session_state.upload_error = None
                 st.session_state.uploader_key += 1
@@ -253,14 +193,11 @@ def render_upload():
 
     st.divider()
     
-    # --- FITUR HAPUS FILE (MULTI-SELECT) ---
     st.subheader("🗑️ Hapus Data File")
     df_log = db.get_all_log_files()
     
     if not df_log.empty:
         st.markdown("Pilih file yang ingin dihapus (bisa lebih dari satu).")
-        
-        # Tampilkan multiselect (bisa centang banyak)
         file_to_delete = st.multiselect(
             "Pilih File yang Akan Dihapus:",
             options=df_log["file_name"].tolist(),
@@ -278,7 +215,7 @@ def render_upload():
                 st.rerun()
     else:
         st.info("Belum ada file yang tersimpan di database.")
-        
+
 
 @st.fragment
 def render_dashboard():
@@ -647,7 +584,6 @@ def render_edit():
 def render_master():
     st.subheader("⚙️ Master Data")
     
-    # --- 1. MASTER SEKOLAH ---
     st.markdown("#### 🏫 Master Sekolah")
     df_sekolah = db.load_master("master_sekolah")
     up_sek = st.file_uploader("Upload CSV/Excel Sekolah (kolom: kode, nama)", type=["csv", "xlsx"], key="up_sek_v3")
@@ -667,7 +603,6 @@ def render_master():
 
     st.divider()
 
-    # --- 2. MASTER JENIS BAYAR ---
     st.markdown("#### 💳 Master Jenis Bayar")
     df_bayar = db.load_master("master_bayar")
     up_bayar = st.file_uploader("Upload CSV/Excel Jenis Bayar (kolom: kode, nama)", type=["csv", "xlsx"], key="up_bayar_v3")
@@ -687,12 +622,9 @@ def render_master():
 
     st.divider()
 
-    # --- 3. MASTER KATEGORI ---
-    st.markdown("#### 🗂️ Master Kategori TP (KODE TP--2 digit pertama VA)")
+    st.markdown("#### 🗂️ Master Kategori TP")
     df_kat = db.load_master("master_kategori")
-    
-    # Fitur Upload Kategori
-    up_kat = st.file_uploader("Upload CSV/Excel Kategori (kolom: Kode TP, Kategori)", type=["csv", "xlsx"], key="up_kat_v3")
+    up_kat = st.file_uploader("Upload CSV/Excel Kategori (kolom: prefix_va, kategori)", type=["csv", "xlsx"], key="up_kat_v3")
     if up_kat:
         if st.session_state.get("done_up_kat") != up_kat.name:
             df_up = pd.read_csv(up_kat) if up_kat.name.endswith(".csv") else pd.read_excel(up_kat)
@@ -702,9 +634,8 @@ def render_master():
                 st.success(f"✅ File {up_kat.name} berhasil diupload!")
                 st.rerun()
             else:
-                st.error("❌ Format salah. Harus ada kolom 'kode TP' dan 'kategori'.")
+                st.error("❌ Format salah. Harus ada kolom 'prefix_va' dan 'kategori'.")
                 
-    # Trik agar tabel bisa diedit manual jika kosong
     if df_kat.empty:
         df_kat = pd.DataFrame(columns=["prefix_va", "kategori"])
         
@@ -722,7 +653,6 @@ def render_master():
 
     st.divider()
 
-    # --- 4. MASTER ALIAS SEKOLAH ---
     st.markdown("#### 🔄 Master Alias (Penggabungan Kode Sekolah)")
     df_alias_sek = db.load_alias_sekolah()
     up_alias_sek = st.file_uploader("Upload CSV/Excel Alias Sekolah (kolom: kode_bank, kode_pic)", type=["csv", "xlsx"], key="up_alias_sek_v1")
@@ -754,7 +684,6 @@ def render_master():
 
     st.divider()
 
-    # --- 5. MASTER ALIAS BAYAR ---
     st.markdown("#### 🔄 Master Alias (Penggabungan Kode Bayar)")
     df_alias_bay = db.load_alias_bayar()
     up_alias_bay = st.file_uploader("Upload CSV/Excel Alias Bayar (kolom: kode_bank, kode_pic)", type=["csv", "xlsx"], key="up_alias_bay_v1")
