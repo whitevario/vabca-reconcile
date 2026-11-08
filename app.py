@@ -27,7 +27,7 @@ def check_password():
 
 st.title("⚖️ VABCA Reconcile PWK SURABAYA 1")
 st.markdown("👩‍💻 Created by **Tri**© Oct 2026 | *Sistem Pencocokkan RK VA & Data PIC*")
-st.info("ℹ️ **NOTICE:** This application is a personal tool for internal reconciliation. It is NOT an official enterprise system provided by the company. The user assumes full responsibility for the data.")
+st.info("ℹ️ **DISCLAIMER:** This application is a personal tool for internal reconciliation. It is NOT an official enterprise system provided by the company. The user assumes full responsibility for the data.")
 
 # ============================================================
 # HELPER FUNCTIONS
