@@ -88,27 +88,38 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
     df_all = pd.concat(df_list, ignore_index=True)
     df_all["uploaded_at"] = now
     df_all["bulan"] = pd.to_datetime(df_all["date"], format="%d/%m/%Y", errors="coerce").dt.strftime("%Y-%m")
-    df_all["id"] = None # Biarkan Supabase mengisi ID otomatis
+    
+    # Bersihkan karakter NUL (\x00) yang bisa membuat Supabase error
+    for col in df_all.select_dtypes(include=['object']).columns:
+        df_all[col] = df_all[col].astype(str).str.replace('\x00', '', regex=False)
+        
+    # Ubah NaN menjadi None agar valid saat jadi JSON
+    df_all = df_all.astype(object).where(pd.notna(df_all), None)
+    records = df_all.to_dict(orient="records") # <--- INI YANG TADI HILANG
     
     # 1. Hapus file lama (jika replace)
     for fname, _ in file_info_list:
         supabase.table("transaksi").delete().eq("asal_file", fname).execute()
         supabase.table("upload_log").delete().eq("file_name", fname).execute()
         
-    # 2. Insert transaksi
+    # 2. Insert transaksi (Bagi jadi potongan kecil)
     chunk_size = 50
     for i in range(0, len(records), chunk_size):
         try:
             supabase.table("transaksi").insert(records[i:i+chunk_size]).execute()
         except Exception as e:
-            # Tampilkan pesan asli ke layar Streamlit
             st.error(f"Error detail dari Supabase: {str(e)}")
             raise e
         
     # 3. Insert log
     log_data = []
     for df, (fname, content) in zip(df_list, file_info_list):
-        log_data.append({"file_name": fname, "file_hash": hashlib.md5(content).hexdigest(), "total_baris": len(df), "uploaded_at": now})
+        log_data.append({
+            "file_name": fname, 
+            "file_hash": hashlib.md5(content).hexdigest(), 
+            "total_baris": len(df), 
+            "uploaded_at": now
+        })
     
     supabase.table("upload_log").upsert(log_data).execute()
     st.cache_data.clear()
