@@ -31,9 +31,10 @@ def nama_bulan_tp(bulan_ke: int) -> str:
     return ""
 
 def parse_txt_content(content: bytes, file_name: str):
-    # Hapus karakter NUL (\x00) yang sering membuat file gagal dibaca
+        # Hapus karakter NULL dan karakter kontrol aneh sebelum dibaca
     content = content.replace(b'\x00', b'')
     text = content.decode("utf-8", errors="replace")
+    
     lines = text.splitlines()
 
     rows = []
