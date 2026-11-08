@@ -6,7 +6,7 @@ import db
 from parser import parse_txt_content, nama_bulan_tp
 from excel_helper import to_excel, pivot_to_excel
 
-st.set_page_config(page_title="VABCA Reconcile", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="VABCA Reconcile SBY1", page_icon="⚖️", layout="wide")
 db.init_db()
 
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
