@@ -87,6 +87,8 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
     
     df_all = pd.concat(df_list, ignore_index=True)
     df_all["uploaded_at"] = now
+    # Bersihkan spasi, lalu paksa baca tanggal
+    df_all["date"] = df_all["date"].astype(str).str.strip()
     df_all["bulan"] = pd.to_datetime(df_all["date"], dayfirst=True, errors="coerce").dt.strftime("%Y-%m")
     
     # Bersihkan karakter NUL (\x00) yang bisa membuat Supabase error
