@@ -147,6 +147,10 @@ def apply_filters_edit(df: pd.DataFrame, key_prefix: str) -> pd.DataFrame:
 
 @st.fragment
 def render_upload():
+    if "upload_success" not in st.session_state:
+        st.session_state.upload_success = None
+    if "upload_error" not in st.session_state:
+        st.session_state.upload_error = None
     st.subheader("📤 Upload File TXT")
     
     if st.session_state.upload_success:
