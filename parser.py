@@ -89,7 +89,7 @@ def parse_txt_content(content: bytes, file_name: str):
         return df, skipped, failed_lines
 
     # --- PROSES VEKTOR (SANGAT CEPAT & SUDAH DIPERBAIKI) ---
-    date_dt = pd.to_datetime(df["date_raw"], format="%d/%m/%y", errors="coerce")
+    date_dt = pd.to_datetime(df["date_raw"], dayfirst=True, errors="coerce")
     df["date"] = date_dt.dt.strftime("%d/%m/%Y")
 
     tahun_awal = date_dt.dt.year.where(date_dt.dt.month >= 7, date_dt.dt.year - 1)
