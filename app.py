@@ -577,7 +577,7 @@ def render_master():
     st.divider()
 
     # --- 3. MASTER ALIAS SEKOLAH ---
-    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Sekolah: misal Bank ada KB dan TK, di PIC digabung di TK)")
+    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Sekolah: misal di Bank ada KB 01 dan TK 02, di PIC digabung di TK 02)")
     df_alias_sek = db.load_alias_sekolah()
     
     # Tambahkan fitur upload Alias
@@ -612,7 +612,7 @@ def render_master():
     st.divider()
 
     # --- 4. MASTER ALIAS BAYAR ---
-    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Bayar: misal bank ada buku paket dan buku tulis, di PIC digabung di buku paket)")
+    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Bayar: misal di bank ada buku paket 07 dan buku tulis 06, di PIC digabung di buku paket 07)")
     df_alias_bay = db.load_alias_bayar()
 
     # Tambahkan fitur upload Alias Bayar
