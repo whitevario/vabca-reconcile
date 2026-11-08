@@ -88,26 +88,29 @@ def parse_txt_content(content: bytes, file_name: str):
     if df.empty:
         return df, skipped, failed_lines
 
-    # --- PROSES VEKTOR (SANGAT CEPAT & SUDAH DIPERBAIKI) ---
-   # Bersihkan spasi tersembunyi di teks tanggal
-df["date_raw"] = df["date_raw"].astype(str).str.strip()
-
-# Paksa deteksi format. Pandas akan mencoba format umum secara otomatis.
-date_dt = pd.to_datetime(df["date_raw"], dayfirst=True, errors="coerce")
-
-# Jika ternyata Pandas gagal membacanya (NaT), kita coba paksa dengan format DD/MM/YY
-# (Ini untuk mencegah data November/Desember yang formatnya beda agar tetap terbaca)
-mask_gagal = date_dt.isna()
-if mask_gagal.any():
-    date_dt[mask_gagal] = pd.to_datetime(df.loc[mask_gagal, "date_raw"], format="%d/%m/%y", errors="coerce")
+    # ==========================================
+    # PROSES VEKTOR (SANGAT CEPAT & TANGGAL PINTAR)
+    # ==========================================
     
+    # 1. Bersihkan spasi tersembunyi
+    df["date_raw"] = df["date_raw"].astype(str).str.strip()
+
+    # 2. Coba baca otomatis
+    date_dt = pd.to_datetime(df["date_raw"], dayfirst=True, errors="coerce")
+
+    # 3. Jika gagal (NaT), paksa pakai format DD/MM/YY
+    mask_gagal = date_dt.isna()
+    if mask_gagal.any():
+        date_dt[mask_gagal] = pd.to_datetime(df.loc[mask_gagal, "date_raw"], format="%d/%m/%y", errors="coerce")
+
+    # 4. JANGAN HAPUS BARIS INI: Seragamkan format ke DD/MM/YYYY
     df["date"] = date_dt.dt.strftime("%d/%m/%Y")
 
+    # 5. Hitung Tahun Bayar dan Bulan TP
     tahun_awal = date_dt.dt.year.where(date_dt.dt.month >= 7, date_dt.dt.year - 1)
     tp_dari_tanggal = tahun_awal.astype(str) + "-" + (tahun_awal + 1).astype(str)
 
     prefix_digit = df["prefix_va"].str.isdigit() & (df["prefix_va"] != "00") & (df["prefix_va"] != "")
-    # PERBAIKAN BUG: Hanya tempel "20" di depan
     th_prefix = pd.to_numeric("20" + df["prefix_va"], errors="coerce")
     
     df["tahun_bayar"] = tp_dari_tanggal
