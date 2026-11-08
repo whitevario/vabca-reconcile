@@ -98,7 +98,7 @@ def parse_txt_content(content: bytes, file_name: str):
     df["date_raw"] = df["date_raw"].astype(str).str.strip()
 
     # 2. Coba baca otomatis
-    date_dt = pd.to_datetime(df["date_raw"], dayfirst=True, errors="coerce")
+    date_dt = pd.to_datetime(df["date_raw"].str.strip(), format="%d/%m/%y", errors="coerce")
 
     # 3. Jika gagal (NaT), paksa pakai format DD/MM/YY
     mask_gagal = date_dt.isna()
