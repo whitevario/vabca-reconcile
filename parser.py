@@ -89,7 +89,18 @@ def parse_txt_content(content: bytes, file_name: str):
         return df, skipped, failed_lines
 
     # --- PROSES VEKTOR (SANGAT CEPAT & SUDAH DIPERBAIKI) ---
-    date_dt = pd.to_datetime(df["date_raw"], dayfirst=True, errors="coerce")
+   # Bersihkan spasi tersembunyi di teks tanggal
+df["date_raw"] = df["date_raw"].astype(str).str.strip()
+
+# Paksa deteksi format. Pandas akan mencoba format umum secara otomatis.
+date_dt = pd.to_datetime(df["date_raw"], dayfirst=True, errors="coerce")
+
+# Jika ternyata Pandas gagal membacanya (NaT), kita coba paksa dengan format DD/MM/YY
+# (Ini untuk mencegah data November/Desember yang formatnya beda agar tetap terbaca)
+mask_gagal = date_dt.isna()
+if mask_gagal.any():
+    date_dt[mask_gagal] = pd.to_datetime(df.loc[mask_gagal, "date_raw"], format="%d/%m/%y", errors="coerce")
+    
     df["date"] = date_dt.dt.strftime("%d/%m/%Y")
 
     tahun_awal = date_dt.dt.year.where(date_dt.dt.month >= 7, date_dt.dt.year - 1)
