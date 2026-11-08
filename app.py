@@ -6,8 +6,17 @@ import db
 from parser import parse_txt_content, nama_bulan_tp
 from excel_helper import to_excel, pivot_to_excel
 
+# --- SET PAGE CONFIG (HANYA BOLEH 1 KALI) ---
 st.set_page_config(page_title="VABCA Reconcile SBY1", page_icon="⚖️", layout="wide")
 db.init_db()
+
+# --- INISIALISASI SESSION STATE (WAJIB DI PALING ATAS) ---
+if "uploader_key" not in st.session_state: 
+    st.session_state.uploader_key = 0
+if "upload_success" not in st.session_state: 
+    st.session_state.upload_success = None
+if "upload_error" not in st.session_state: 
+    st.session_state.upload_error = None
 
 # --- BLOKIR AKSES JIKA BELUM LOGIN / DOMAIN SALAH ---
 if not st.user.is_logged_in:
