@@ -26,7 +26,7 @@ def init_db():
 # ==========================================
 # FUNGSI BACA DATA
 # ==========================================
-@st.cache_data(ttl=60)
+#@st.cache_data(ttl=60)
 def load_all_transaksi() -> pd.DataFrame:
     supabase = get_supabase()
     # Ambil semua data (limit 100.000 baris untuk keamanan memori)
