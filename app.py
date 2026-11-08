@@ -609,7 +609,7 @@ def render_master():
     st.divider()
 
     # --- 3. MASTER KATEGORI ---
-    st.markdown("#### 🗂️ Master Kategori (Prefix NO.VA)")
+    st.markdown("#### 🗂️ Master Kategori (KODE TP--2 digit pertama VA)")
     df_kat = db.load_master("master_kategori")
     
     # Fitur Upload Kategori
@@ -623,7 +623,7 @@ def render_master():
                 st.success(f"✅ File {up_kat.name} berhasil diupload!")
                 st.rerun()
             else:
-                st.error("❌ Format salah. Harus ada kolom 'kode_va' dan 'kategori'.")
+                st.error("❌ Format salah. Harus ada kolom 'kode TP' dan 'kategori'.")
                 
     # Trik agar tabel bisa diedit manual jika kosong
     if df_kat.empty:
@@ -632,7 +632,7 @@ def render_master():
     edited_kat = st.data_editor(
         df_kat, num_rows="dynamic", use_container_width=False, key="edit_kat_v3",
         column_config={
-            "prefix_va": st.column_config.TextColumn("Kode VA", width="large"),
+            "prefix_va": st.column_config.TextColumn("Kode TP", width="large"),
             "kategori": st.column_config.TextColumn("Kategori", width="large")
         }
     )
