@@ -166,7 +166,20 @@ def render_upload():
     # -------------------------------------------------
 
     st.subheader("📤 Upload File TXT")
-    
+    # --- TESTING MENTAH (HAPUS JIKA SUDAH BERHASIL) ---
+    st.markdown("### 🚨 CEK DATA MENTAH DARI DATABASE")
+    df_cek = db.load_all_transaksi()
+    if not df_cek.empty:
+        st.write(f"Total baris terbaca oleh aplikasi: **{len(df_cek)}**")
+        # Filter manual untuk November
+        df_nov = df_cek[df_cek['asal_file'].str.contains('202311', na=False)]
+        st.write(f"Baris November yang ditemukan: **{len(df_nov)}**")
+        st.dataframe(df_nov.head(5))
+    else:
+        st.error("Data Kosong! Aplikasi tidak bisa membaca database sama sekali.")
+    st.markdown("---")
+    # ---------------------------------------------------
+    ###
     if st.session_state.upload_success:
         # ... (sisa kode di bawahnya biarkan sama)
         s = st.session_state.upload_success
