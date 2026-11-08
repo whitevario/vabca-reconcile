@@ -201,20 +201,32 @@ def render_upload():
 
     st.divider()
     
-    # --- FITUR HAPUS FILE ---
+    # --- FITUR HAPUS FILE (MULTI-SELECT) ---
     st.subheader("🗑️ Hapus Data File")
     df_log = db.get_all_log_files()
+    
     if not df_log.empty:
-        st.markdown("Pilih file yang ingin dihapus dari database.")
-        file_to_delete = st.selectbox("Pilih File", df_log["file_name"].tolist(), key="file_hapus")
+        st.markdown("Pilih file yang ingin dihapus (bisa lebih dari satu).")
+        
+        # Tampilkan multiselect (bisa centang banyak)
+        file_to_delete = st.multiselect(
+            "Pilih File yang Akan Dihapus:",
+            options=df_log["file_name"].tolist(),
+            key="file_hapus_multi"
+        )
+        
         if st.button("❌ Hapus File Terpilih", type="primary"):
-            with st.spinner("Menghapus dari Cloud..."):
-                db.delete_file(file_to_delete)
-            st.success(f"✅ File {file_to_delete} berhasil dihapus!")
-            st.rerun()
+            if not file_to_delete:
+                st.warning("Pilih minimal satu file terlebih dahulu.")
+            else:
+                with st.spinner(f"Menghapus {len(file_to_delete)} file dari Cloud..."):
+                    for fname in file_to_delete:
+                        db.delete_file(fname)
+                st.success(f"✅ Berhasil menghapus {len(file_to_delete)} file!")
+                st.rerun()
     else:
         st.info("Belum ada file yang tersimpan di database.")
-
+        
 
 @st.fragment
 def render_dashboard():
