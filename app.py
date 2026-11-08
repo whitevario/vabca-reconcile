@@ -647,15 +647,39 @@ def render_master():
     st.divider()
 
     # --- 5. MASTER KATEGORI ---
-    st.markdown("#### 🗂️ Master Kategori")
+        st.markdown("#### 🗂️ Master Kategori (Prefix NO.VA)")
     df_kat = db.load_master("master_kategori")
+    
+    # Fitur Upload Kategori
+    up_kat = st.file_uploader("Upload CSV/Excel Kategori (kolom: prefix_va, kategori)", type=["csv", "xlsx"], key="up_kat_v3")
+    if up_kat:
+        if st.session_state.get("done_up_kat") != up_kat.name:
+            df_up = pd.read_csv(up_kat) if up_kat.name.endswith(".csv") else pd.read_excel(up_kat)
+            if {"prefix_va", "kategori"}.issubset(df_up.columns):
+                db.upsert_master("master_kategori", df_up[["prefix_va", "kategori"]].dropna())
+                st.session_state["done_up_kat"] = up_kat.name
+                st.success(f"✅ File {up_kat.name} berhasil diupload!")
+                st.rerun()
+            else:
+                st.error("❌ Format salah. Harus ada kolom 'prefix_va' dan 'kategori'.")
+                
+    # Trik agar tabel bisa diedit manual jika kosong
     if df_kat.empty:
         df_kat = pd.DataFrame(columns=["prefix_va", "kategori"])
-    edited_kat = st.data_editor(df_kat, num_rows="dynamic", key="edit_kat_v3", use_container_width=False)
+        
+    edited_kat = st.data_editor(
+        df_kat, num_rows="dynamic", use_container_width=False, key="edit_kat_v3",
+        column_config={
+            "prefix_va": st.column_config.TextColumn("Prefix VA", width="small"),
+            "kategori": st.column_config.TextColumn("Kategori", width="large")
+        }
+    )
     if st.button("💾 Simpan Master Kategori"):
         db.upsert_master("master_kategori", edited_kat.dropna())
         st.success("✅ Tersimpan.")
         st.rerun()
+
+    st.divider()
 
 # ============================================================
 # EKSEKUSI TAB
