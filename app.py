@@ -29,7 +29,9 @@ with st.sidebar:
     st.write(f"Login sebagai: **{email_user}**")
     if st.button("Logout"):
         st.logout()
-        
+
+st.set_page_config(page_title="VABCA Reconcile", page_icon="⚖️", layout="wide")
+db.init_db()
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 if "upload_success" not in st.session_state: st.session_state.upload_success = None
 if "upload_error" not in st.session_state: st.session_state.upload_error = None
