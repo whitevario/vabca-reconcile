@@ -95,14 +95,15 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
         supabase.table("transaksi").delete().eq("asal_file", fname).execute()
         supabase.table("upload_log").delete().eq("file_name", fname).execute()
         
-    # 2. Insert transaksi (Bagi jadi potongan kecil agar aman)
-    # Ubah NaN menjadi None secara eksplisit agar aman untuk JSON
-    df_all = df_all.astype(object).where(pd.notna(df_all), None)
-    records = df_all.to_dict(orient="records")
-    
-    chunk_size = 50  # <--- KECILKAN DARI 1000 KE 200
+    # 2. Insert transaksi
+    chunk_size = 50
     for i in range(0, len(records), chunk_size):
-        supabase.table("transaksi").insert(records[i:i+chunk_size]).execute()
+        try:
+            supabase.table("transaksi").insert(records[i:i+chunk_size]).execute()
+        except Exception as e:
+            # Tampilkan pesan asli ke layar Streamlit
+            st.error(f"Error detail dari Supabase: {str(e)}")
+            raise e
         
     # 3. Insert log
     log_data = []
