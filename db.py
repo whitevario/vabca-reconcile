@@ -190,13 +190,17 @@ def update_no_va_bulk_vector(df_target: pd.DataFrame, updates_df: pd.DataFrame):
     if updates_df.empty: return
     supabase = get_supabase()
     
-    # Update data satu per satu (Supabase tidak mendukung update bulk kompleks dari dataframe)
-    # Tapi kita bisa melakukan update secara paralel/cepat menggunakan upsert jika ID-nya ada
+    # Ambil data yang dibutuhkan saja, ubah ke format dictionary
     records = updates_df[["id", "no_va", "prefix_va", "tahun_bayar", "bulan_tp", "kode_sekolah", "kode_bayar"]].to_dict(orient="records")
     
-    chunk_size = 100
+    # Kirim sekaligus per 500 baris agar cepat (Bulk Upsert)
+    chunk_size = 500
     for i in range(0, len(records), chunk_size):
-        supabase.table("transaksi").upsert(records[i:i+chunk_size]).execute()
+        try:
+            supabase.table("transaksi").upsert(records[i:i+chunk_size]).execute()
+        except Exception as e:
+            st.error(f"Error detail dari Supabase: {str(e)}")
+            raise e
         
     st.cache_data.clear()
 
