@@ -156,13 +156,19 @@ def apply_filters_edit(df: pd.DataFrame, key_prefix: str) -> pd.DataFrame:
 
 @st.fragment
 def render_upload():
+    # --- INISIALISASI PENGAMAN (WAJIB ADA DI SINI) ---
+    if "uploader_key" not in st.session_state:
+        st.session_state.uploader_key = 0
     if "upload_success" not in st.session_state:
         st.session_state.upload_success = None
     if "upload_error" not in st.session_state:
         st.session_state.upload_error = None
+    # -------------------------------------------------
+
     st.subheader("📤 Upload File TXT")
     
     if st.session_state.upload_success:
+        # ... (sisa kode di bawahnya biarkan sama)
         s = st.session_state.upload_success
         st.success(f"✅ Selesai! {s['saved']} file baru, {s['replaced']} diganti. {s['total_rows']} baris tersimpan.")
         if st.button("🗑️ Bersihkan Tampilan"): 
