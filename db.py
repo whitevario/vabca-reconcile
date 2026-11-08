@@ -8,7 +8,6 @@ from supabase import create_client, Client
 # KONFIGURASI SUPABASE
 # ==========================================
 # Saat online di Streamlit Cloud, ambil dari secrets
-# Saat lokal, isi manual di sini (atau buat file .streamlit/secrets.toml)
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 
