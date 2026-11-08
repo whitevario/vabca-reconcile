@@ -576,78 +576,8 @@ def render_master():
 
     st.divider()
 
-    # --- 3. MASTER ALIAS SEKOLAH ---
-    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Sekolah: misal di Bank ada KB 01 dan TK 02, di PIC digabung di TK 02)")
-    df_alias_sek = db.load_alias_sekolah()
-    
-    # Tambahkan fitur upload Alias
-    up_alias_sek = st.file_uploader("Upload CSV/Excel Alias Sekolah (kolom: kode_bank, kode_pic)", type=["csv", "xlsx"], key="up_alias_sek_v1")
-    if up_alias_sek:
-        if st.session_state.get("done_up_alias_sek") != up_alias_sek.name:
-            df_up = pd.read_csv(up_alias_sek) if up_alias_sek.name.endswith(".csv") else pd.read_excel(up_alias_sek)
-            if {"kode_bank", "kode_pic"}.issubset(df_up.columns):
-                db.save_alias_sekolah(df_up[["kode_bank", "kode_pic"]].dropna())
-                st.session_state["done_up_alias_sek"] = up_alias_sek.name
-                st.success(f"✅ File {up_alias_sek.name} berhasil diupload!")
-                st.rerun()
-            else:
-                st.error("❌ Format salah. Harus ada kolom 'kode_bank' dan 'kode_pic'.")
-
-    # Jika dataframe kosong, buat kerangka kosong agar data_editor bisa menambah baris
-    if df_alias_sek.empty:
-        df_alias_sek = pd.DataFrame(columns=["kode_bank", "kode_pic"])
-        
-    edited_alias_sek = st.data_editor(
-        df_alias_sek, num_rows="dynamic", use_container_width=False, key="edit_alias_sek_v1",
-        column_config={
-            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
-            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
-        }
-    )
-    if st.button("💾 Simpan Master Alias Sekolah"):
-        db.save_alias_sekolah(edited_alias_sek.dropna())
-        st.success("✅ Tersimpan.")
-        st.rerun()
-
-    st.divider()
-
-    # --- 4. MASTER ALIAS BAYAR ---
-    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Bayar: misal di bank ada buku paket 07 dan buku tulis 06, di PIC digabung di buku paket 07)")
-    df_alias_bay = db.load_alias_bayar()
-
-    # Tambahkan fitur upload Alias Bayar
-    up_alias_bay = st.file_uploader("Upload CSV/Excel Alias Bayar (kolom: kode_bank, kode_pic)", type=["csv", "xlsx"], key="up_alias_bay_v1")
-    if up_alias_bay:
-        if st.session_state.get("done_up_alias_bay") != up_alias_bay.name:
-            df_up = pd.read_csv(up_alias_bay) if up_alias_bay.name.endswith(".csv") else pd.read_excel(up_alias_bay)
-            if {"kode_bank", "kode_pic"}.issubset(df_up.columns):
-                db.save_alias_bayar(df_up[["kode_bank", "kode_pic"]].dropna())
-                st.session_state["done_up_alias_bay"] = up_alias_bay.name
-                st.success(f"✅ File {up_alias_bay.name} berhasil diupload!")
-                st.rerun()
-            else:
-                st.error("❌ Format salah. Harus ada kolom 'kode_bank' dan 'kode_pic'.")
-
-    # Jika dataframe kosong, buat kerangka kosong
-    if df_alias_bay.empty:
-        df_alias_bay = pd.DataFrame(columns=["kode_bank", "kode_pic"])
-
-    edited_alias_bay = st.data_editor(
-        df_alias_bay, num_rows="dynamic", use_container_width=False, key="edit_alias_bay_v1",
-        column_config={
-            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
-            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
-        }
-    )
-    if st.button("💾 Simpan Master Alias Bayar"):
-        db.save_alias_bayar(edited_alias_bay.dropna())
-        st.success("✅ Tersimpan.")
-        st.rerun()
-
-    st.divider()
-
-    # --- 5. MASTER KATEGORI ---
-        st.markdown("#### 🗂️ Master Kategori (Prefix NO.VA)")
+    # --- 3. MASTER KATEGORI ---
+    st.markdown("#### 🗂️ Master Kategori (Prefix NO.VA)")
     df_kat = db.load_master("master_kategori")
     
     # Fitur Upload Kategori
@@ -680,6 +610,68 @@ def render_master():
         st.rerun()
 
     st.divider()
+
+    # --- 4. MASTER ALIAS SEKOLAH ---
+    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Sekolah)")
+    df_alias_sek = db.load_alias_sekolah()
+    up_alias_sek = st.file_uploader("Upload CSV/Excel Alias Sekolah (kolom: kode_bank, kode_pic)", type=["csv", "xlsx"], key="up_alias_sek_v1")
+    if up_alias_sek:
+        if st.session_state.get("done_up_alias_sek") != up_alias_sek.name:
+            df_up = pd.read_csv(up_alias_sek) if up_alias_sek.name.endswith(".csv") else pd.read_excel(up_alias_sek)
+            if {"kode_bank", "kode_pic"}.issubset(df_up.columns):
+                db.save_alias_sekolah(df_up[["kode_bank", "kode_pic"]].dropna())
+                st.session_state["done_up_alias_sek"] = up_alias_sek.name
+                st.success(f"✅ File {up_alias_sek.name} berhasil diupload!")
+                st.rerun()
+            else:
+                st.error("❌ Format salah. Harus ada kolom 'kode_bank' dan 'kode_pic'.")
+
+    if df_alias_sek.empty:
+        df_alias_sek = pd.DataFrame(columns=["kode_bank", "kode_pic"])
+        
+    edited_alias_sek = st.data_editor(
+        df_alias_sek, num_rows="dynamic", use_container_width=False, key="edit_alias_sek_v1",
+        column_config={
+            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
+            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
+        }
+    )
+    if st.button("💾 Simpan Master Alias Sekolah"):
+        db.save_alias_sekolah(edited_alias_sek.dropna())
+        st.success("✅ Tersimpan.")
+        st.rerun()
+
+    st.divider()
+
+    # --- 5. MASTER ALIAS BAYAR ---
+    st.markdown("#### 🔄 Master Alias (Penggabungan Kode Bayar)")
+    df_alias_bay = db.load_alias_bayar()
+    up_alias_bay = st.file_uploader("Upload CSV/Excel Alias Bayar (kolom: kode_bank, kode_pic)", type=["csv", "xlsx"], key="up_alias_bay_v1")
+    if up_alias_bay:
+        if st.session_state.get("done_up_alias_bay") != up_alias_bay.name:
+            df_up = pd.read_csv(up_alias_bay) if up_alias_bay.name.endswith(".csv") else pd.read_excel(up_alias_bay)
+            if {"kode_bank", "kode_pic"}.issubset(df_up.columns):
+                db.save_alias_bayar(df_up[["kode_bank", "kode_pic"]].dropna())
+                st.session_state["done_up_alias_bay"] = up_alias_bay.name
+                st.success(f"✅ File {up_alias_bay.name} berhasil diupload!")
+                st.rerun()
+            else:
+                st.error("❌ Format salah. Harus ada kolom 'kode_bank' dan 'kode_pic'.")
+
+    if df_alias_bay.empty:
+        df_alias_bay = pd.DataFrame(columns=["kode_bank", "kode_pic"])
+
+    edited_alias_bay = st.data_editor(
+        df_alias_bay, num_rows="dynamic", use_container_width=False, key="edit_alias_bay_v1",
+        column_config={
+            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
+            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
+        }
+    )
+    if st.button("💾 Simpan Master Alias Bayar"):
+        db.save_alias_bayar(edited_alias_bay.dropna())
+        st.success("✅ Tersimpan.")
+        st.rerun()
 
 # ============================================================
 # EKSEKUSI TAB
