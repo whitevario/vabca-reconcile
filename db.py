@@ -112,10 +112,21 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
 
 def upsert_master(table: str, df: pd.DataFrame):
     supabase = get_supabase()
-    supabase.table(table).delete().neq("kode", "___").execute() # Hapus semua data
+    
+    # Tentukan nama kolom PRIMARY KEY untuk masing-masing tabel
+    if table == "master_kategori":
+        pk_col = "prefix_va"
+    else:
+        pk_col = "kode" # Untuk master_sekolah dan master_bayar
+        
+    # Hapus semua data lama menggunakan kolom yang benar
+    supabase.table(table).delete().neq(pk_col, "___").execute()
+    
+    # Masukkan data baru
     if not df.empty:
         records = df.where(pd.notna(df), None).to_dict(orient="records")
         supabase.table(table).insert(records).execute()
+        
     st.cache_data.clear()
 
 def save_alias_sekolah(df: pd.DataFrame):
