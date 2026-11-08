@@ -623,16 +623,16 @@ def render_master():
                 st.success(f"✅ File {up_kat.name} berhasil diupload!")
                 st.rerun()
             else:
-                st.error("❌ Format salah. Harus ada kolom 'prefix_va' dan 'kategori'.")
+                st.error("❌ Format salah. Harus ada kolom 'kode_va' dan 'kategori'.")
                 
     # Trik agar tabel bisa diedit manual jika kosong
     if df_kat.empty:
         df_kat = pd.DataFrame(columns=["prefix_va", "kategori"])
         
     edited_kat = st.data_editor(
-        df_kat, num_rows="dynamic", use_container_width=False, key="edit_kat_v3",
+        df_kat, num_rows="dynamic", use_container_width=True, key="edit_kat_v3",
         column_config={
-            "prefix_va": st.column_config.TextColumn("Prefix VA", width="small"),
+            "prefix_va": st.column_config.TextColumn("Kode VA", width="small"),
             "kategori": st.column_config.TextColumn("Kategori", width="large")
         }
     )
