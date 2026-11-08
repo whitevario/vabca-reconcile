@@ -26,20 +26,28 @@ def init_db():
 # ==========================================
 # FUNGSI BACA DATA
 # ==========================================
-@st.cache_data(ttl=10)  # Kita kecilkan cache-nya jadi 10 detik agar cepat update
+@st.cache_data(ttl=10)
 def load_all_transaksi() -> pd.DataFrame:
     supabase = get_supabase()
     
-    # Ambil semua data tanpa batas (atau limit yang sangat besar)
-    # Jika datanya ribuan, ini mungkin agak lambat, tapi dijamin lengkap
-    response = supabase.table("transaksi").select("*").execute()
+    all_data = []
+    limit = 1000
+    start = 0
     
-    df = pd.DataFrame(response.data)
+    # Looping untuk mengambil data per 1000 baris sampai habis
+    while True:
+        response = supabase.table("transaksi").select("*").range(start, start + limit - 1).execute()
+        if not response.data:
+            break
+        all_data.extend(response.data)
+        start += limit
+        
+    df = pd.DataFrame(all_data)
     if not df.empty:
-        # Urutkan berdasarkan ID agar data terbaru ada di atas
         df = df.sort_values(by="id", ascending=False).reset_index(drop=True)
         
     return df
+    
 @st.cache_data(ttl=60)
 def get_list_bulan() -> list:
     supabase = get_supabase()
