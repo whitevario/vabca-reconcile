@@ -200,3 +200,17 @@ def get_detail_pic(df_pic_asli: pd.DataFrame, kode_sekolah: str, kode_bayar: str
 # ==========================================
 def backup_db_bytes() -> bytes:
     return b"" # Tidak dipakai di Cloud
+
+@st.cache_data(ttl=3600) # Cache 1 jam agar tidak membebani database
+def get_db_size_mb() -> float:
+    """Mengambil ukuran database Supabase dalam MB."""
+    supabase = get_supabase()
+    try:
+        # Menggunakan RPC atau query langsung. 
+        # Karena Supabase Python client tidak punya fungsi bawaan untuk ini,
+        # kita gunakan query raw ke sistem PostgreSQL.
+        response = supabase.rpc("get_db_size").execute()
+        return float(response.data)
+    except Exception as e:
+        # Jika RPC belum dibuat, kita pakai estimasi dari jumlah baris (opsional)
+        return 0.0
