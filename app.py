@@ -190,7 +190,9 @@ def render_upload():
                 if df_list:
                     with st.spinner("Menyimpan ke Cloud Supabase..."):
                         db.insert_transaksi_bulk(df_list, file_info_list)
-
+                # --- TAMBAHAN UNTUK DEBUG ---
+                st.warning(f"DEBUG: Mencoba menyimpan {total_rows} baris data ke Supabase...")
+                # ----------------------------
                 st.session_state.upload_success = {"saved": saved, "replaced": replaced, "total_rows": total_rows}
                 st.session_state.upload_error = None
                 st.session_state.uploader_key += 1
