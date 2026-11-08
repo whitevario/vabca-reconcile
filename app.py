@@ -192,7 +192,7 @@ def render_upload():
     if not df_log.empty:
         st.markdown("Pilih file yang ingin dihapus dari database.")
         file_to_delete = st.selectbox("Pilih File", df_log["file_name"].tolist(), key="file_hapus")
-        if st.button("❌ Hapus File Terpilih", type="danger"):
+        if st.button("❌ Hapus File Terpilih", type="primary"):
             with st.spinner("Menghapus dari Cloud..."):
                 db.delete_file(file_to_delete)
             st.success(f"✅ File {file_to_delete} berhasil dihapus!")
