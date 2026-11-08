@@ -31,7 +31,7 @@ def nama_bulan_tp(bulan_ke: int) -> str:
     return ""
 
 def parse_txt_content(content: bytes, file_name: str):
-        # Hapus karakter NULL dan karakter kontrol aneh sebelum dibaca
+    # Hapus karakter NULL dan karakter kontrol aneh sebelum dibaca
     content = content.replace(b'\x00', b'')
     text = content.decode("utf-8", errors="replace")
     
@@ -98,14 +98,13 @@ def parse_txt_content(content: bytes, file_name: str):
     # 1. Bersihkan spasi tersembunyi
     df["date_raw"] = df["date_raw"].astype(str).str.strip()
 
-    # 2. Coba baca otomatis
-    # Paksa baca dengan format DD/MM/YY (2 digit tahun)
+    # 2. Paksa baca dengan format DD/MM/YY (2 digit tahun)
     date_dt = pd.to_datetime(df["date_raw"], format="%d/%m/%y", errors="coerce")
 
-    # 3. Jika gagal (NaT), paksa pakai format DD/MM/YY
+    # 3. Jika gagal (NaT), coba dengan dayfirst
     mask_gagal = date_dt.isna()
     if mask_gagal.any():
-        date_dt[mask_gagal] = pd.to_datetime(df.loc[mask_gagal, "date_raw"], format="%d/%m/%y", errors="coerce")
+        date_dt[mask_gagal] = pd.to_datetime(df.loc[mask_gagal, "date_raw"], dayfirst=True, errors="coerce")
 
     # 4. JANGAN HAPUS BARIS INI: Seragamkan format ke DD/MM/YYYY
     df["date"] = date_dt.dt.strftime("%d/%m/%Y")
