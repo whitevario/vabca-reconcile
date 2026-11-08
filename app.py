@@ -9,6 +9,27 @@ from excel_helper import to_excel, pivot_to_excel
 st.set_page_config(page_title="VABCA Reconcile SBY1", page_icon="⚖️", layout="wide")
 db.init_db()
 
+# --- BLOKIR AKSES JIKA BELUM LOGIN / DOMAIN SALAH ---
+if not st.user.is_logged_in:
+    st.warning("🔒 Aplikasi ini hanya untuk internal Yayasan Yohannes Gabriel. Silakan login.")
+    if st.button("Login dengan Google"):
+        st.login("google")
+    st.stop() # Hentikan aplikasi jika belum login
+
+# --- CEK DOMAIN EMAIL ---
+email_user = st.user.get("email", "")
+if not email_user.endswith("@yohannesgabriel.org"):
+    st.error(f"Akses Ditolak. Email {email_user} tidak diizinkan. Gunakan email @yohannesgabriel.org.")
+    if st.button("Logout"):
+        st.logout()
+    st.stop() # Hentikan aplikasi jika domain salah
+
+# --- JIKA LOLOS, TAMPILKAN TOMBOL LOGOUT DI SIDEBAR ---
+with st.sidebar:
+    st.write(f"Login sebagai: **{email_user}**")
+    if st.button("Logout"):
+        st.logout()
+        
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 if "upload_success" not in st.session_state: st.session_state.upload_success = None
 if "upload_error" not in st.session_state: st.session_state.upload_error = None
