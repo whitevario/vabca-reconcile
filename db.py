@@ -91,7 +91,11 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
     if not df_list: return
     supabase = get_supabase()
     now = datetime.now().isoformat(timespec="seconds")
-    
+
+        # Bersihkan semua karakter NUL (\x00) dari dataframe sebelum masuk Supabase
+    for df in df_list:
+        for col in df.select_dtypes(include=['object']).columns:
+            df[col] = df[col].astype(str).str.replace('\x00', '', regex=False)
     df_all = pd.concat(df_list, ignore_index=True)
     df_all["uploaded_at"] = now
     # Bersihkan spasi, lalu paksa baca tanggal
