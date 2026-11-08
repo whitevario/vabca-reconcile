@@ -95,9 +95,12 @@ def insert_transaksi_bulk(df_list: list, file_info_list: list):
         supabase.table("transaksi").delete().eq("asal_file", fname).execute()
         supabase.table("upload_log").delete().eq("file_name", fname).execute()
         
-    # 2. Insert transaksi (Bagi jadi potongan 1000 baris agar tidak timeout)
-    records = df_all.where(pd.notna(df_all), None).to_dict(orient="records")
-    chunk_size = 1000
+    # 2. Insert transaksi (Bagi jadi potongan kecil agar aman)
+    # Pastikan data bersih dari NaN
+    df_all = df_all.where(pd.notna(df_all), None)
+    records = df_all.to_dict(orient="records")
+    
+    chunk_size = 200  # <--- KECILKAN DARI 1000 KE 200
     for i in range(0, len(records), chunk_size):
         supabase.table("transaksi").insert(records[i:i+chunk_size]).execute()
         
