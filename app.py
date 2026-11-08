@@ -269,25 +269,65 @@ def render_laporan():
             if not df_bank.empty:
                 tbl_bulan = df_bank.groupby("bulan").agg(Nominal=("credit", "sum"), Transaksi=("no_va", "count"), VA_Unik=("no_va", "nunique")).reset_index().sort_values("bulan")
                 tbl_bulan_tampil = tbl_bulan.copy(); tbl_bulan_tampil["Nominal"] = tbl_bulan_tampil["Nominal"].apply(lambda x: format_rp(x))
-                st.dataframe(tbl_bulan_tampil, use_container_width=False, hide_index=True)
+                
+                st.dataframe(
+                    tbl_bulan_tampil, 
+                    use_container_width=False, 
+                    hide_index=True,
+                    column_config={
+                        "bulan": st.column_config.TextColumn("Bulan", width="small"),
+                        "Nominal": st.column_config.TextColumn("Nominal", width="medium"),
+                        "Transaksi": st.column_config.NumberColumn("Transaksi", width="small"),
+                        "VA_Unik": st.column_config.NumberColumn("VA Unik", width="small"),
+                    }
+                )
                 
                 pivot_bank = df_bank.pivot_table(index="bulan", columns="tahun_bayar", values="credit", aggfunc="sum", fill_value=0).sort_index()
                 pivot_bank["TOTAL"] = pivot_bank.sum(axis=1); pivot_bank.loc["TOTAL"] = pivot_bank.sum()
-                st.dataframe(pivot_bank.style.format(lambda x: f"Rp {x:,.0f}".replace(",", ".")), use_container_width=False)
+                pivot_bank = pivot_bank.reset_index()
+                
+                for c in pivot_bank.columns:
+                    if c != "bulan": pivot_bank[c] = pivot_bank[c].apply(lambda x: f"Rp {x:,.0f}".replace(",", "."))
+                
+                col_cfg_bank = {"bulan": st.column_config.TextColumn("Bulan", width="small")}
+                for c in pivot_bank.columns:
+                    if c != "bulan": col_cfg_bank[c] = st.column_config.TextColumn(c, width="medium")
+                
+                st.dataframe(pivot_bank, use_container_width=False, hide_index=True, column_config=col_cfg_bank)
 
         with sub_tp:
             df_tp = apply_filters(df, key_prefix="tp")
             if not df_tp.empty:
                 tbl_tp = df_tp.groupby("tahun_bayar").agg(Nominal=("credit", "sum"), Transaksi=("no_va", "count"), VA_Unik=("no_va", "nunique")).reset_index().sort_values("tahun_bayar")
                 tbl_tp_tampil = tbl_tp.copy(); tbl_tp_tampil["Nominal"] = tbl_tp_tampil["Nominal"].apply(lambda x: format_rp(x))
-                st.dataframe(tbl_tp_tampil, use_container_width=False, hide_index=True)
+                
+                st.dataframe(
+                    tbl_tp_tampil, 
+                    use_container_width=False, 
+                    hide_index=True,
+                    column_config={
+                        "tahun_bayar": st.column_config.TextColumn("TP", width="medium"),
+                        "Nominal": st.column_config.TextColumn("Nominal", width="medium"),
+                        "Transaksi": st.column_config.NumberColumn("Transaksi", width="small"),
+                        "VA_Unik": st.column_config.NumberColumn("VA Unik", width="small"),
+                    }
+                )
                 
                 pivot_tp = df_tp.pivot_table(index="tahun_bayar", columns="bulan_tp", values="credit", aggfunc="sum", fill_value=0).sort_index()
                 pivot_tp.columns = [f"B{int(c)}" for c in pivot_tp.columns]
                 for i in range(1, 13):
                     if f"B{i}" not in pivot_tp.columns: pivot_tp[f"B{i}"] = 0
                 pivot_tp = pivot_tp[[f"B{i}" for i in range(1, 13)]]; pivot_tp["TOTAL"] = pivot_tp.sum(axis=1)
-                st.dataframe(pivot_tp.style.format(lambda x: f"Rp {x:,.0f}".replace(",", ".")), use_container_width=False)
+                pivot_tp = pivot_tp.reset_index()
+                
+                for c in pivot_tp.columns:
+                    if c != "tahun_bayar": pivot_tp[c] = pivot_tp[c].apply(lambda x: f"Rp {x:,.0f}".replace(",", "."))
+                        
+                col_cfg_tp = {"tahun_bayar": st.column_config.TextColumn("TP", width="medium")}
+                for c in pivot_tp.columns:
+                    if c != "tahun_bayar": col_cfg_tp[c] = st.column_config.TextColumn(c, width="medium")
+                        
+                st.dataframe(pivot_tp, use_container_width=False, hide_index=True, column_config=col_cfg_tp)
 
         with sub_sek_bayar:
             df_sb = apply_filters(df, key_prefix="sekbayar")
@@ -296,14 +336,32 @@ def render_laporan():
                 df_pivot = df_sb if tp_pilih == "(Semua)" else df_sb[df_sb["tahun_bayar"] == tp_pilih]
                 pivot_sb = df_pivot.pivot_table(index="nama_sekolah", columns="nama_bayar", values="credit", aggfunc="sum", fill_value=0)
                 pivot_sb["TOTAL"] = pivot_sb.sum(axis=1); pivot_sb = pivot_sb.sort_values("TOTAL", ascending=False); pivot_sb.loc["TOTAL"] = pivot_sb.sum()
-                st.dataframe(pivot_sb.style.format(lambda x: f"Rp {x:,.0f}".replace(",", ".")), use_container_width=False)
+                pivot_sb = pivot_sb.reset_index()
+                
+                for c in pivot_sb.columns:
+                    if c != "nama_sekolah": pivot_sb[c] = pivot_sb[c].apply(lambda x: f"Rp {x:,.0f}".replace(",", "."))
+                        
+                col_cfg_sb = {"nama_sekolah": st.column_config.TextColumn("Sekolah", width="large")}
+                for c in pivot_sb.columns:
+                    if c != "nama_sekolah": col_cfg_sb[c] = st.column_config.TextColumn(c, width="medium")
+                        
+                st.dataframe(pivot_sb, use_container_width=False, hide_index=True, column_config=col_cfg_sb)
 
         with sub_sek_tp:
             df_st = apply_filters(df, key_prefix="sektp")
             if not df_st.empty:
                 pivot_st = df_st.pivot_table(index="nama_sekolah", columns="tahun_bayar", values="credit", aggfunc="sum", fill_value=0)
                 pivot_st["TOTAL"] = pivot_st.sum(axis=1); pivot_st = pivot_st.sort_values("TOTAL", ascending=False); pivot_st.loc["TOTAL"] = pivot_st.sum()
-                st.dataframe(pivot_st.style.format(lambda x: f"Rp {x:,.0f}".replace(",", ".")), use_container_width=False)
+                pivot_st = pivot_st.reset_index()
+                
+                for c in pivot_st.columns:
+                    if c != "nama_sekolah": pivot_st[c] = pivot_st[c].apply(lambda x: f"Rp {x:,.0f}".replace(",", "."))
+                        
+                col_cfg_st = {"nama_sekolah": st.column_config.TextColumn("Sekolah", width="large")}
+                for c in pivot_st.columns:
+                    if c != "nama_sekolah": col_cfg_st[c] = st.column_config.TextColumn(c, width="medium")
+                        
+                st.dataframe(pivot_st, use_container_width=False, hide_index=True, column_config=col_cfg_st)
 
         with sub_siswa:
             df_sw = apply_filters(df, key_prefix="siswa")
@@ -311,14 +369,38 @@ def render_laporan():
                 tbl_siswa = df_sw.groupby(["nama_sekolah", "remark"]).agg(Nominal=("credit", "sum"), Transaksi=("no_va", "count")).reset_index().sort_values("Nominal", ascending=False).head(50)
                 tbl_siswa.columns = ["Sekolah", "Siswa", "Nominal", "Transaksi"]
                 tbl_siswa_tampil = tbl_siswa.copy(); tbl_siswa_tampil["Nominal"] = tbl_siswa_tampil["Nominal"].apply(lambda x: format_rp(x))
-                st.dataframe(tbl_siswa_tampil, use_container_width=False, hide_index=True)
+                
+                st.dataframe(
+                    tbl_siswa_tampil, 
+                    use_container_width=False, 
+                    hide_index=True,
+                    column_config={
+                        "Sekolah": st.column_config.TextColumn("Sekolah", width="large"),
+                        "Siswa": st.column_config.TextColumn("Siswa", width="large"),
+                        "Nominal": st.column_config.TextColumn("Nominal", width="medium"),
+                        "Transaksi": st.column_config.NumberColumn("Transaksi", width="small"),
+                    }
+                )
 
         with sub_detail:
             df_dt = apply_filters(df, key_prefix="detail")
             if not df_dt.empty:
                 df_show_tampil = df_dt[["date", "no_va", "remark", "tahun_bayar", "kategori", "credit"]].sort_values("date", ascending=False).copy()
                 df_show_tampil["credit"] = df_show_tampil["credit"].apply(lambda x: format_rp(x))
-                st.dataframe(df_show_tampil, use_container_width=False, hide_index=True)
+                
+                st.dataframe(
+                    df_show_tampil, 
+                    use_container_width=False, 
+                    hide_index=True,
+                    column_config={
+                        "date": st.column_config.TextColumn("Tanggal", width="small"),
+                        "no_va": st.column_config.TextColumn("NO.VA", width="medium"),
+                        "remark": st.column_config.TextColumn("Nama Siswa", width="large"),
+                        "tahun_bayar": st.column_config.TextColumn("TP", width="small"),
+                        "kategori": st.column_config.TextColumn("Kategori", width="medium"),
+                        "credit": st.column_config.TextColumn("Nominal", width="medium"),
+                    }
+                )
 
 
 @st.fragment
@@ -424,7 +506,17 @@ def render_rekon():
                 df_tampil = pd.concat([df_tampil, pd.DataFrame([total_row])], ignore_index=True)
                 
                 format_dict = {"total_bank": "Rp {:,.0f}", "nominal_pic": "Rp {:,.0f}", "Selisih": "Rp {:,.0f}"}
-                st.dataframe(df_tampil.style.format(format_dict, na_rep=""), use_container_width=False, hide_index=True)
+                st.dataframe(
+                    df_tampil.style.format(format_dict, na_rep=""), 
+                    use_container_width=False, 
+                    hide_index=True,
+                    column_config={
+                        "kode_sekolah": st.column_config.TextColumn("Kode Sek", width="small"),
+                        "kode_bayar": st.column_config.TextColumn("Kode Bayar", width="small"),
+                        "Nama Sekolah": st.column_config.TextColumn("Nama Sekolah", width="large"),
+                        "Nama Bayar": st.column_config.TextColumn("Nama Bayar", width="medium"),
+                    }
+                )
                 
                 df_pilihan = df_target.copy()
                 opsi = df_pilihan.apply(lambda x: f"{x['kode_sekolah']} - {x['kode_bayar']}", axis=1).tolist()
@@ -458,7 +550,17 @@ def render_rekon():
                     else:
                         det_final = pd.concat(list_detail, ignore_index=True)
                         det_final["credit"] = det_final["credit"].apply(lambda x: format_rp(x))
-                        st.dataframe(det_final, use_container_width=False, hide_index=True)
+                        st.dataframe(
+                            det_final, 
+                            use_container_width=False, 
+                            hide_index=True,
+                            column_config={
+                                "date": st.column_config.TextColumn("Tanggal", width="small"),
+                                "no_va": st.column_config.TextColumn("NO.VA", width="medium"),
+                                "remark": st.column_config.TextColumn("Nama Siswa", width="large"),
+                                "credit": st.column_config.TextColumn("Nominal", width="medium"),
+                            }
+                        )
                 else:
                     det = db.get_detail_pic(df_pic_asli, sekolah, bayar)
                     if det.empty: st.info("Data tidak ditemukan.")
@@ -538,9 +640,22 @@ def render_edit():
                     st.rerun()
 
         st.divider()
+        
+        # Gunakan column_config di sini agar kolom "remark" lebar
         edited_df = st.data_editor(
             df_filtered[["id", "date", "no_va", "remark", "credit", "tahun_bayar"]],
-            disabled=["id", "date", "remark", "credit", "tahun_bayar"], key="editor_no_va", use_container_width=False, hide_index=True
+            disabled=["id", "date", "remark", "credit", "tahun_bayar"], 
+            key="editor_no_va", 
+            use_container_width=False, 
+            hide_index=True,
+            column_config={
+                "id": st.column_config.NumberColumn("ID", width="small"),
+                "date": st.column_config.TextColumn("Tanggal", width="small"),
+                "no_va": st.column_config.TextColumn("NO.VA (Bisa Diedit)", width="medium"),
+                "remark": st.column_config.TextColumn("Nama Siswa", width="large"),
+                "credit": st.column_config.NumberColumn("Nominal", format="Rp %d", width="medium"),
+                "tahun_bayar": st.column_config.TextColumn("TP Saat Ini", width="medium"),
+            }
         )
         
         if st.button("💾 Simpan Perubahan Satuan", type="primary"):
@@ -597,7 +712,16 @@ def render_master():
                 st.rerun()
             else:
                 st.error("❌ Format salah. Harus ada kolom 'kode' dan 'nama'.")
-    edited_sek = st.data_editor(df_sekolah, num_rows="dynamic", key="edit_sek_v3", use_container_width=False)
+    edited_sek = st.data_editor(
+        df_sekolah, 
+        num_rows="dynamic", 
+        key="edit_sek_v3", 
+        use_container_width=False,
+        column_config={
+            "kode": st.column_config.TextColumn("Kode", width="small"),
+            "nama": st.column_config.TextColumn("Nama Sekolah", width="large"),
+        }
+    )
     if st.button("💾 Simpan Master Sekolah"):
         db.upsert_master("master_sekolah", edited_sek.dropna()); st.success("✅ Tersimpan."); st.rerun()
 
@@ -616,7 +740,16 @@ def render_master():
                 st.rerun()
             else:
                 st.error("❌ Format salah. Harus ada kolom 'kode' dan 'nama'.")
-    edited_bayar = st.data_editor(df_bayar, num_rows="dynamic", key="edit_bayar_v3", use_container_width=False)
+    edited_bayar = st.data_editor(
+        df_bayar, 
+        num_rows="dynamic", 
+        key="edit_bayar_v3", 
+        use_container_width=False,
+        column_config={
+            "kode": st.column_config.TextColumn("Kode", width="small"),
+            "nama": st.column_config.TextColumn("Nama Jenis Bayar", width="large"),
+        }
+    )
     if st.button("💾 Simpan Master Jenis Bayar"):
         db.upsert_master("master_bayar", edited_bayar.dropna()); st.success("✅ Tersimpan."); st.rerun()
 
@@ -640,9 +773,12 @@ def render_master():
         df_kat = pd.DataFrame(columns=["prefix_va", "kategori"])
         
     edited_kat = st.data_editor(
-        df_kat, num_rows="dynamic", use_container_width=False, key="edit_kat_v3",
+        df_kat, 
+        num_rows="dynamic", 
+        use_container_width=False, 
+        key="edit_kat_v3",
         column_config={
-            "prefix_va": st.column_config.TextColumn("Kode TP", width="large"),
+            "prefix_va": st.column_config.TextColumn("Kode TP", width="small"),
             "kategori": st.column_config.TextColumn("Kategori", width="large")
         }
     )
@@ -671,10 +807,13 @@ def render_master():
         df_alias_sek = pd.DataFrame(columns=["kode_bank", "kode_pic"])
         
     edited_alias_sek = st.data_editor(
-        df_alias_sek, num_rows="dynamic", use_container_width=False, key="edit_alias_sek_v1",
+        df_alias_sek, 
+        num_rows="dynamic", 
+        use_container_width=False, 
+        key="edit_alias_sek_v1",
         column_config={
-            "kode_bank": st.column_config.TextColumn("Kode Bank", width="large"),
-            "kode_pic": st.column_config.TextColumn("Kode PIC", width="large")
+            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
+            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
         }
     )
     if st.button("💾 Simpan Master Alias Sekolah"):
@@ -702,10 +841,13 @@ def render_master():
         df_alias_bay = pd.DataFrame(columns=["kode_bank", "kode_pic"])
 
     edited_alias_bay = st.data_editor(
-        df_alias_bay, num_rows="dynamic", use_container_width=False, key="edit_alias_bay_v1",
+        df_alias_bay, 
+        num_rows="dynamic", 
+        use_container_width=False, 
+        key="edit_alias_bay_v1",
         column_config={
-            "kode_bank": st.column_config.TextColumn("Kode Bank", width="large"),
-            "kode_pic": st.column_config.TextColumn("Kode PIC", width="large")
+            "kode_bank": st.column_config.TextColumn("Kode Bank", width="small"),
+            "kode_pic": st.column_config.TextColumn("Kode PIC", width="small")
         }
     )
     if st.button("💾 Simpan Master Alias Bayar"):
